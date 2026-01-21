@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Home, Trophy, BarChart2, History, Scroll, UserCog, AlertCircle, Sword, Users, Skull, Shield, User } from 'lucide-react';
 import { GameProvider, useGameStore } from './hooks/useGameStore';
 import { HomePage } from './pages/HomePage';
@@ -18,6 +18,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { SeasonTrailerModal } from './components/SeasonTrailerModal';
 import { CURRENT_SEASON_ID } from './constants';
 import { MobileNavigation } from './components/MobileNavigation';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Desktop Sidebar Item
 const NavItem = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => {
@@ -124,13 +125,15 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <HashRouter>
-      <GameProvider>
-        <Layout>
-          <AppContent />
-        </Layout>
-      </GameProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <GameProvider>
+          <Layout>
+            <AppContent />
+          </Layout>
+        </GameProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 
