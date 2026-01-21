@@ -429,15 +429,6 @@ export const HomePage = () => {
         </div>
       </div>
 
-      <div className="fixed bottom-6 right-6 md:hidden z-30">
-         <button 
-            onClick={() => setShowQuickLog(true)}
-            className="w-14 h-14 bg-amber-500 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 active:scale-90 transition-transform text-black"
-         >
-            <Plus size={28} />
-         </button>
-      </div>
-
       {showQuickLog && (
         <QuickLogModal 
           onClose={() => setShowQuickLog(false)}

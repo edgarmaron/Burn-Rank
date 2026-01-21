@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
-import { Home, Trophy, BarChart2, History, Scroll, UserCog, AlertCircle, Sword, Users, Skull, Shield, User } from 'lucide-react';
+import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { Home, Trophy, BarChart2, History, Scroll, UserCog, Sword, Users, Skull, Shield, User } from 'lucide-react';
 import { GameProvider, useGameStore } from './hooks/useGameStore';
 import { HomePage } from './pages/HomePage';
 import { RankPage } from './pages/RankPage';
@@ -19,6 +19,8 @@ import { SeasonTrailerModal } from './components/SeasonTrailerModal';
 import { CURRENT_SEASON_ID } from './constants';
 import { MobileNavigation } from './components/MobileNavigation';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Toaster } from './components/ui/Toast';
+import { QuickActions } from './components/QuickActions';
 
 // Desktop Sidebar Item
 const NavItem = ({ to, icon: Icon, label }: { to: string, icon: any, label: string }) => {
@@ -55,6 +57,9 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
       
       {/* MOBILE NAV SYSTEM */}
       <MobileNavigation />
+
+      {/* GLOBAL FAB */}
+      <QuickActions />
 
       {/* DESKTOP SIDEBAR (Hidden on Mobile) */}
       <nav className="hidden md:flex z-40 w-64 bg-surface border-r border-border flex-col justify-between p-4 sticky top-0 h-screen">
@@ -94,8 +99,11 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
       </nav>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto min-h-screen p-4 md:p-8 pt-20 pb-24 md:pb-8 md:pt-8 w-full max-w-7xl mx-auto">
-        {children}
+      <main className="flex-1 overflow-y-auto min-h-screen p-4 md:p-8 pt-20 pb-24 md:pb-8 md:pt-8 w-full max-w-7xl mx-auto relative">
+        <ErrorBoundary>
+            {children}
+        </ErrorBoundary>
+        <Toaster />
       </main>
 
       {/* Modals */}
@@ -126,13 +134,13 @@ const AppContent = () => {
 const App = () => {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <HashRouter>
         <GameProvider>
           <Layout>
             <AppContent />
           </Layout>
         </GameProvider>
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   );
 };

@@ -217,13 +217,15 @@ export const recomputeHistory = (
         const bossIdx = (d.getMonth() + d.getFullYear()) % BOSS_TYPES.length;
         currentState.bossState.type = BOSS_TYPES[bossIdx].id;
         
-        // Check if won
-        if (log && log.calories !== null) {
+        // Check if won (Must be ranked win)
+        const isWin = !!log && log.calories !== null && (log.isRanked ?? true);
+
+        if (isWin) {
             currentState.bossState.result = 'win';
             currentState.bossState.status = 'completed';
             
             // Unlock Boss Badge if not present
-            const badgeId = `badge_boss_${currentState.bossState.type.split('_')[1]}`; // e.g., badge_boss_flame
+            const badgeId = `badge_boss_${currentState.bossState.type.split('_')[1]}`; 
             if (!currentState.unlockedBadges.some(b => b.id === badgeId)) {
                 currentState.unlockedBadges.push({ id: badgeId, date: dateStr });
             }
@@ -237,16 +239,22 @@ export const recomputeHistory = (
     }
 
     const isToday = dateStr === new Date().toISOString().split('T')[0];
-    const hasLog = !!log && log.calories !== null;
-    const shouldProcessUser = hasLog || (!isToday && d < today); 
+    // A log only counts as a Ranked Win if it has calories AND is explicitly ranked (or legacy)
+    const hasRankedLog = !!log && log.calories !== null && (log.isRanked ?? true);
+    
+    // We should process the day if:
+    // 1. We have a ranked log (Win)
+    // 2. It's a past day (Loss/Decay)
+    // 3. We have extra LP/rewards to apply
+    const shouldProcessUser = hasRankedLog || (!isToday && d < today); 
     
     let lpChange = 0;
     let result: 'WIN' | 'LOSS' | 'QUEST' | 'SHIELDED' | null = null;
     let details: any = {};
 
     if (shouldProcessUser || extraLp > 0 || extraCp > 0 || extraEssence > 0) {
-         if (isToday && !hasLog && extraLp === 0 && extraCp === 0) {
-             // Do nothing
+         if (isToday && !hasRankedLog && extraLp === 0 && extraCp === 0) {
+             // Do nothing (e.g. stats only save for today)
          } else {
              const res = processDay({
                 current: currentState,
@@ -314,7 +322,7 @@ export const recomputeHistory = (
     if (currentState.essence >= 500) unlockBadge('badge_ess_500');
 
     // Time-based badges (Requires log timestamp)
-    if (log && log.timestamp) {
+    if (log && log.timestamp && log.isRanked) {
         const hour = parseInt(log.timestamp.split(':')[0]);
         const min = parseInt(log.timestamp.split(':')[1]);
         // Early Bird: before 8:00
@@ -355,8 +363,6 @@ export const calculateAchievementProgress = (ach: AchievementConfig, rank: RankS
         if (ach.id === 'ach_streak_7' || ach.id === 'ach_streak_30') {
             current = rank.streak;
         } else if (ach.id === 'ach_perfect_week') {
-            // Check logs for 7 day streak of all 3
-            // Simplified: Iterate logs backwards
             let perfectStreak = 0;
             const sorted = [...logs].sort((a,b) => b.date.localeCompare(a.date));
             for(const l of sorted) {
@@ -369,36 +375,20 @@ export const calculateAchievementProgress = (ach: AchievementConfig, rank: RankS
         if (ach.id.includes('cp')) current = rank.cp;
         if (ach.id.includes('ess')) current = rank.essence;
     } else if (ach.category === 'League') {
-        // League ranks are stored in league.userPlacementHistory
-        // Find best rank ever? Or current? "Reach" implies best ever or current season best.
-        // We track history in league.userPlacementHistory (last 7 days). 
-        // RankState does not persist "best league rank ever".
-        // Use userPlacementHistory for "Recent" or scan legacy?
-        // Let's use userPlacementHistory min rank for now.
         if (league && league.userPlacementHistory.length > 0) {
             const bestRank = Math.min(...league.userPlacementHistory.map(h => h.rank));
-            // Target is smaller is better. But progress bars usually go up.
-            // Special handling for League: if bestRank <= target, it is completed.
-            // Progress display is tricky. 
-            // Let's set 'current' to inverted or just 0/1 logic for completion?
-            // Let's use: current = (21 - bestRank) if we assume 20 racers. 
-            // Or simpler: Just return completed boolean logic mostly.
-            // For the progress bar, let's just use 1 or 0 for now if complex.
-            // Actually, let's just check completion.
             if (bestRank <= ach.target) current = ach.target; 
-            else current = 0; // Not there yet
+            else current = 0;
         }
     } else if (ach.category === 'Boss') {
         if (ach.id === 'ach_boss_1') {
             current = rank.unlockedBadges.some(b => b.id.startsWith('badge_boss_')) ? 1 : 0;
         } else if (ach.id === 'ach_boss_3') {
-             // Count unique boss badges
              const unique = new Set(rank.unlockedBadges.filter(b => b.id.startsWith('badge_boss_')).map(b => b.id)).size;
              current = unique;
         }
     }
     
-    // Cap current at target for visual
     const visualCurrent = Math.min(current, ach.target);
     const percent = Math.min(100, Math.floor((visualCurrent / ach.target) * 100));
     const completed = current >= ach.target;
@@ -424,7 +414,7 @@ interface ProcessParams {
 function processDay({ current, log, profile, extraLp, extraCp, extraEssence, date, skills, weeklyShieldsUsed }: ProcessParams) {
     let state = { ...current };
     const config = TIER_CONFIG[state.tier];
-    const isWin = !!log && log.calories !== null;
+    const isWin = !!log && log.calories !== null && (log.isRanked ?? true);
     
     const getSkill = (id: string) => skills.find(s => s.id === id)?.level || 0;
     
@@ -688,7 +678,7 @@ export const getDashboardMetrics = (
   league: LeagueState | null
 ) => {
     let risk = 'SAFE';
-    const lastLogDate = logs.length > 0 ? logs.sort((a,b) => b.date.localeCompare(a.date))[0].date : null;
+    const lastLogDate = logs.filter(l => l.isRanked !== false).sort((a,b) => b.date.localeCompare(a.date))[0]?.date;
     const today = new Date().toISOString().split('T')[0];
     
     if (lastLogDate) {

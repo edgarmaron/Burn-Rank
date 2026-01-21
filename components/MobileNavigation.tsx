@@ -1,9 +1,7 @@
 
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Trophy, Users, User, Sword, Skull, Shield, BarChart2, History, Scroll, UserCog, Plus, ArrowRight } from 'lucide-react';
-import { useGameStore } from '../hooks/useGameStore';
-import { QuickLogModal } from './QuickLogModal';
+import { Menu, X, Home, Trophy, Users, User, Sword, Skull, Shield, BarChart2, History, Scroll, UserCog } from 'lucide-react';
 
 interface NavItemProps {
   to: string;
@@ -31,8 +29,6 @@ const MobileNavItem = ({ to, icon: Icon, label, onClick }: NavItemProps) => (
 
 export const MobileNavigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [showQuickLog, setShowQuickLog] = useState(false);
-  const { saveLog, logs } = useGameStore();
   const location = useLocation();
 
   // Determine page title based on route
@@ -53,9 +49,6 @@ export const MobileNavigation = () => {
 
   const closeDrawer = () => setIsOpen(false);
 
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todayLog = logs.find(l => l.date === todayStr);
-
   return (
     <>
       {/* 1. TOP BAR (Fixed) */}
@@ -72,12 +65,7 @@ export const MobileNavigation = () => {
               {getTitle()}
           </h1>
 
-          <button 
-             onClick={() => setShowQuickLog(true)}
-             className="p-2 text-amber-500 hover:text-amber-400 active:scale-95 transition-transform"
-          >
-              <Plus size={24} />
-          </button>
+          <div className="w-10"></div> {/* Spacer for balance */}
       </div>
 
       {/* 2. DRAWER (Overlay + Sidebar) */}
@@ -135,15 +123,8 @@ export const MobileNavigation = () => {
               <span className="text-[10px] font-bold">Rank</span>
           </NavLink>
           
-          {/* Center Action Button */}
-          <button 
-            onClick={() => setShowQuickLog(true)}
-            className="flex flex-col items-center justify-center -mt-6"
-          >
-              <div className="w-14 h-14 rounded-full bg-amber-500 border-4 border-zinc-950 flex items-center justify-center shadow-lg text-zinc-900 active:scale-95 transition-transform">
-                  <Plus size={24} strokeWidth={3} />
-              </div>
-          </button>
+          {/* Spacer for FAB */}
+          <div className="w-12"></div>
 
           <NavLink to="/profile" className={({ isActive }) => `flex flex-col items-center gap-1 p-2 ${isActive ? 'text-amber-500' : 'text-zinc-500'}`}>
               <User size={20} />
@@ -154,15 +135,6 @@ export const MobileNavigation = () => {
               <span className="text-[10px] font-bold">More</span>
           </button>
       </div>
-
-      {/* Global Quick Log Modal */}
-      {showQuickLog && (
-        <QuickLogModal 
-          onClose={() => setShowQuickLog(false)}
-          onSave={(log) => saveLog(log)}
-          existingLog={todayLog}
-        />
-      )}
     </>
   );
 };

@@ -41,7 +41,7 @@ export interface Item {
   id: string;
   name: string;
   type: 'weapon' | 'relic' | 'banner' | 'title';
-  tier: Tier | 'Cosmetic' | 'Legacy'; // Added Legacy
+  tier: Tier | 'Cosmetic' | 'Legacy'; 
   description: string;
   cpBonus?: number; 
   essenceBonus?: number; 
@@ -59,7 +59,7 @@ export interface Badge {
   type: BadgeCategory;
   rarity: BadgeRarity;
   icon: string;
-  secret?: boolean; // If true, description hidden until unlocked
+  secret?: boolean; 
 }
 
 export interface UnlockedBadge {
@@ -120,13 +120,13 @@ export interface RankState {
   // State
   bossState: BossState;
   seasonId: string;
-  lastSeenSeasonId: string; // For Season Trailer
+  lastSeenSeasonId: string; 
   legacySeasons: LegacySeason[];
 }
 
 export interface UserProfile {
   name: string;
-  bio?: string; // New
+  bio?: string; 
   weight: number;
   goalWeight: number;
   deadline: string;
@@ -144,12 +144,13 @@ export interface UserProfile {
 
 export interface DailyLog {
   date: string; 
-  timestamp?: string; // New for time-based badges
+  timestamp?: string; 
   calories: number | null;
   steps: number | null;
   sleepHours: number | null;
   weightKg: number | null;
   notes: string | null;
+  isRanked?: boolean; // New flag for stats-only vs ranked match
 }
 
 export interface QuestRewards {
@@ -228,7 +229,7 @@ export interface AppData {
   profile: UserProfile | null;
   logs: DailyLog[];
   questClaims: QuestClaim[];
-  achievementClaims: string[]; // IDs of claimed achievements
+  achievementClaims: string[]; 
   activeQuests?: ActiveQuestsState;
   skills: SkillPerk[]; 
   league: LeagueState | null;
