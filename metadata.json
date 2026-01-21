@@ -1,0 +1,5 @@
+{
+  "name": "Ranked Cut",
+  "description": "A MOBA-inspired ranked habit tracker for weight loss. Log calories to gain LP, climb tiers, and avoid decay.",
+  "requestFramePermissions": []
+}
